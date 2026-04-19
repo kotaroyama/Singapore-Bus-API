@@ -25,40 +25,23 @@ async def fetch_arrival_info(station_id: str):
     services = data["Services"]
     return services
 
-def get_next_3_arrivals(services):
-    first_3_arrivals = []
+def get_next_n_arrivals(services, n):
+    arrivals = []
     for service in services:
-        # If the first_3_arrivals list dosn't have any elements yet, initialize 
-        # with the first three busses for the first service
-        if not first_3_arrivals:
-            first_3_arrivals.append((service["ServiceNo"], service["NextBus"]))
-            first_3_arrivals.append((service["ServiceNo"], service["NextBus2"]))
-            first_3_arrivals.append((service["ServiceNo"], service["NextBus3"]))
-        else:
-            next_3_busses = [service["NextBus"], service["NextBus2"], service["NextBus3"]]
-            for bus in next_3_busses:
-                # Skip if the estimated arrival time for the bus is empty.
-                if not bus["EstimatedArrival"]:
-                    break
-                arrival_time = datetime.fromisoformat(bus["EstimatedArrival"])
-                for index, arrival in enumerate(first_3_arrivals):
-                    # Check if the item in first_3_arrivals is empty
-                    if arrival[1]["EstimatedArrival"]:
-                        first_arrival_time = datetime.fromisoformat(
-                            arrival[1]["EstimatedArrival"]
-                        )
-                        if arrival_time < first_arrival_time:
-                            first_3_arrivals.insert(
-                                index,
-                                (service["ServiceNo"], bus)
-                            )
-                            first_3_arrivals.pop()
-                            break
-                    else:
-                        first_3_arrivals[index] = (service["ServiceNo"], bus)
-                        break
-        
-    return first_3_arrivals
+        if service["NextBus"]["EstimatedArrival"]:
+            arrivals.append((service["ServiceNo"], service["NextBus"]))
+        if service["NextBus2"]["EstimatedArrival"]:
+            arrivals.append((service["ServiceNo"], service["NextBus2"]))
+        if service["NextBus3"]["EstimatedArrival"]:
+            arrivals.append((service["ServiceNo"], service["NextBus3"]))
+
+    # Sort arrivals by time
+    sorted_arrivals = sorted(
+        arrivals,
+        key=lambda arrival: datetime.fromisoformat(arrival[1]["EstimatedArrival"])
+    )
+
+    return sorted_arrivals[:n]
 
 async def get_bus_stops():
     # Retrieve cached bus stops
