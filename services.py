@@ -105,3 +105,13 @@ def get_cached_bus_stops():
     raw_bus_stops = r.lrange("bus_stops", 0, -1)
     bus_stops = [json.loads(bus_stop) for bus_stop in raw_bus_stops]
     return bus_stops
+
+async def search_bus_stops_with_query(query):
+    bus_stops = await get_bus_stops()
+    selected_bus_stops = [bus_stop for bus_stop in bus_stops if query.lower() in bus_stop["Description"].lower()]
+    return selected_bus_stops
+
+async def retrieve_bus_stop_with_code(station_id: str):
+    bus_stops = await get_bus_stops()
+    bus_stop = next((bus_stop for bus_stop in bus_stops if bus_stop["BusStopCode"] == station_id))
+    return bus_stop
