@@ -2,19 +2,21 @@ from typing import Annotated, List
 
 from fastapi import FastAPI, Path
 
-from schemas import BusStop, SearchedBusStop
-from services import fetch_arrival_info, get_next_n_arrivals, retrieve_bus_stop_with_code, search_bus_stops_with_query
+from schemas import BusStop, SearchedBusStop, Services
+from services import fetch_arrival_info, get_next_n_arrivals, next_arrivals_for_service,retrieve_bus_stop_with_code, search_bus_stops_with_query
 from utils import decode_arrival, get_bus_stop_desc
 
 app = FastAPI()
 
+stop_code_param = Annotated[str, Path(
+    pattern = r"^\d{5}$",
+    description="A 5-digit code for a bus stop",
+    examples="05189",
+)]
+
 @app.get("/bus/{stop_code}")
 async def get_next_arrivals(
-    stop_code: Annotated[str, Path(
-        pattern = r"^\d{5}$",
-        description="A 5-digit code for a bus stop",
-        examples="05189"
-    )],
+    stop_code: stop_code_param,
     limit: int = 3
 ) -> BusStop:
     # Get arrival info for the next n buses for all lines
@@ -52,11 +54,7 @@ async def search_bus_stops(query: str) -> List[SearchedBusStop]:
 
 @app.get("/stops/{stop_code}")
 async def get_bus_stop_details(
-    stop_code: Annotated[str, Path(
-        pattern = r"^\d{5}$",
-        description="A 5-digit code for a bus stop",
-        examples="05189"
-    )],
+    stop_code: stop_code_param,
 ) -> SearchedBusStop:
     bus_stop = await retrieve_bus_stop_with_code(stop_code)
     formatted_bus_stop = SearchedBusStop(
@@ -65,3 +63,37 @@ async def get_bus_stop_details(
         road_name=bus_stop["RoadName"]
     )
     return formatted_bus_stop
+
+@app.get("/stops/{stop_code}/services")
+async def get_all_services_at_stop(
+    stop_code: stop_code_param,
+) -> Services:
+    raw_services = await fetch_arrival_info(stop_code)
+    formatted_services = []
+    for raw_service in raw_services:
+        formatted_services.append(raw_service["ServiceNo"])
+    return Services(services=formatted_services)
+
+@app.get("/stops/{stop_code}/{service_no}")
+async def get_arrivals_for_service(
+    stop_code: stop_code_param,
+    service_no: Annotated[str, Path(
+        description="Bus line number",
+        examples="166",
+    )]
+):
+    raw_services = await fetch_arrival_info(stop_code)
+    raw_arrivals = next_arrivals_for_service(raw_services, service_no)
+    first_n_arrivals = get_next_n_arrivals(raw_arrivals, n=3)
+    formatted_arrivals = []
+    for arrival in first_n_arrivals:
+        formatted_arrivals.append(decode_arrival(arrival))
+    
+    # Construct return
+    description = await get_bus_stop_desc(stop_code)
+    bus_stop = BusStop(
+        stop_code=stop_code,
+        description=description,
+        next_arrivals=formatted_arrivals,
+    )
+    return bus_stop

@@ -115,3 +115,8 @@ async def retrieve_bus_stop_with_code(station_id: str):
     bus_stops = await get_bus_stops()
     bus_stop = next((bus_stop for bus_stop in bus_stops if bus_stop["BusStopCode"] == station_id))
     return bus_stop
+
+def next_arrivals_for_service(services, service_no) -> list:
+    for service in services:
+        if service["ServiceNo"] == service_no:
+            return [service]

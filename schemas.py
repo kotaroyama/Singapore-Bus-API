@@ -7,6 +7,9 @@ class Arrival(BaseModel):
     service: str
     minutes: int
 
+class Services(BaseModel):
+    services: List[str]
+
 class BusStop(BaseModel):
     stop_code: str
     description: str
