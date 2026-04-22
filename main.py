@@ -74,7 +74,7 @@ async def get_all_services_at_stop(
         formatted_services.append(raw_service["ServiceNo"])
     return Services(services=formatted_services)
 
-@app.get("/stops/{stop_code}/{service_no}")
+@app.get("/bus/{stop_code}/{service_no}")
 async def get_arrivals_for_service(
     stop_code: stop_code_param,
     service_no: Annotated[str, Path(
