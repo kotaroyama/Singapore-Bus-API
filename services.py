@@ -111,6 +111,18 @@ async def search_bus_stops_with_query(query):
     selected_bus_stops = [bus_stop for bus_stop in bus_stops if query.lower() in bus_stop["Description"].lower()]
     return selected_bus_stops
 
+async def search_bus_stops_with_lat_and_long(lat_long_range):
+    north_bound = lat_long_range["north"]
+    south_bound = lat_long_range["south"]
+    east_bound = lat_long_range["east"]
+    west_bound = lat_long_range["west"]
+    bus_stops = await get_bus_stops()
+    filtered_bus_stops = []
+    for bus_stop in bus_stops:
+        if south_bound <= bus_stop["Latitude"] <= north_bound and west_bound <= bus_stop["Longitude"] <= east_bound:
+            filtered_bus_stops.append(bus_stop)
+    return filtered_bus_stops
+
 async def retrieve_bus_stop_with_code(station_id: str):
     bus_stops = await get_bus_stops()
     bus_stop = next((bus_stop for bus_stop in bus_stops if bus_stop["BusStopCode"] == station_id))

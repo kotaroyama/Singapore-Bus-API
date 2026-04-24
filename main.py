@@ -1,10 +1,10 @@
 from typing import Annotated, List
 
-from fastapi import FastAPI, Path
+from fastapi import FastAPI, Path, Query
 
-from schemas import BusStop, SearchedBusStop, Services
-from services import fetch_arrival_info, get_next_n_arrivals, next_arrivals_for_service,retrieve_bus_stop_with_code, search_bus_stops_with_query
-from utils import decode_arrival, get_bus_stop_desc
+from schemas import BusStop, SearchedBusStop, Services, SingaporeLocation
+from services import fetch_arrival_info, get_next_n_arrivals, next_arrivals_for_service,retrieve_bus_stop_with_code, search_bus_stops_with_lat_and_long, search_bus_stops_with_query
+from utils import decode_arrival, get_bus_stop_desc, get_bus_stop_list, get_lat_long_range
 
 app = FastAPI()
 
@@ -38,18 +38,21 @@ async def get_next_arrivals(
 
     return bus_stop
 
+@app.get("/stops/nearby")
+async def get_nearby_stations(
+    location: Annotated[SingaporeLocation, Query()],
+) -> List[SearchedBusStop]:
+    point = (1.2977097061008, 103.8532247463225)
+    radius = 100 # meter
+    range = get_lat_long_range(point, radius)
+    bus_stops = await search_bus_stops_with_lat_and_long(range)
+    formatted_bus_stops = get_bus_stop_list(bus_stops)
+    return formatted_bus_stops
+
 @app.get("/stops")
 async def search_bus_stops(query: str) -> List[SearchedBusStop]:
-    selected_bus_stops = await search_bus_stops_with_query(query)
-    formatted_bus_stops = []
-    for selected_bus_stop in selected_bus_stops:
-        formatted_bus_stops.append(
-            SearchedBusStop(
-                stop_code=selected_bus_stop["BusStopCode"],
-                description=selected_bus_stop["Description"],
-                road_name=selected_bus_stop["RoadName"],
-            )
-        )
+    bus_stops = await search_bus_stops_with_query(query)
+    formatted_bus_stops = get_bus_stop_list(bus_stops)
     return formatted_bus_stops
 
 @app.get("/stops/{stop_code}")
