@@ -100,3 +100,7 @@ async def get_arrivals_for_service(
         next_arrivals=formatted_arrivals,
     )
     return bus_stop
+
+@app.get("/health", status_code=200)
+async def health_check():
+    return {"status": "ok"}
