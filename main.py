@@ -3,7 +3,15 @@ from typing import Annotated, List
 from fastapi import FastAPI, Path, Query
 
 from schemas import BusStop, SearchedBusStop, Services, SingaporeLocation
-from services import fetch_arrival_info, get_next_n_arrivals, next_arrivals_for_service,retrieve_bus_stop_with_code, search_bus_stops_with_lat_and_long, search_bus_stops_with_query
+from services import (
+    fetch_arrival_info, 
+    get_next_n_arrivals,
+    next_arrivals_for_service,
+    reset_cached_bus_stops, 
+    retrieve_bus_stop_with_code, 
+    search_bus_stops_with_lat_and_long, 
+    search_bus_stops_with_query,
+)
 from utils import decode_arrival, get_bus_stop_desc, get_bus_stop_list, get_lat_long_range
 
 app = FastAPI()
@@ -104,3 +112,9 @@ async def get_arrivals_for_service(
 @app.get("/health", status_code=200)
 async def health_check():
     return {"status": "ok"}
+
+@app.post("/cache/refresh")
+async def cache_refresh() -> List[SearchedBusStop]:
+    bus_stops = await reset_cached_bus_stops()
+    formatted_bus_stops = get_bus_stop_list(bus_stops[:5])
+    return formatted_bus_stops

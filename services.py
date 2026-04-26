@@ -64,9 +64,10 @@ async def get_bus_stops():
             async with httpx.AsyncClient() as client:
                 tasks = [fetch_url(client, url) for url in urls]
                 data = await asyncio.gather(*tasks)
-        except httpx.HTTPStatusError as e:
-            print(e)
-            return None
+        except httpx.HTTPStatusError as exc:
+            raise RuntimeError(
+                f"Request failed with status {exc.response.status_code}"
+            ) from exc
 
         for item in data:
             new_bus_stops.extend(item["value"])
@@ -104,6 +105,12 @@ def get_cached_bus_stops():
     # Convert raw string back to dictionaries
     raw_bus_stops = r.lrange("bus_stops", 0, -1)
     bus_stops = [json.loads(bus_stop) for bus_stop in raw_bus_stops]
+    return bus_stops
+
+async def reset_cached_bus_stops():
+    r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+    r.delete("bus_stops")
+    bus_stops = await get_bus_stops()
     return bus_stops
 
 async def search_bus_stops_with_query(query):
