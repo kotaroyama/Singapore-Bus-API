@@ -94,13 +94,13 @@ async def fetch_url(client, url):
     return r.json()
 
 def cache_bus_stops(bus_stops):
-    r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+    r = redis.Redis(host="redis", port=6379, decode_responses=True)
     for bus_stop in bus_stops:
         r.rpush("bus_stops", json.dumps(bus_stop))
     r.expire("bus_stops",  86400)
 
 def get_cached_bus_stops():
-    r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+    r = redis.Redis(host="redis", port=6379, decode_responses=True)
 
     # Convert raw string back to dictionaries
     raw_bus_stops = r.lrange("bus_stops", 0, -1)
@@ -108,7 +108,7 @@ def get_cached_bus_stops():
     return bus_stops
 
 async def reset_cached_bus_stops():
-    r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+    r = redis.Redis(host="redis", port=6379, decode_responses=True)
     r.delete("bus_stops")
     bus_stops = await get_bus_stops()
     return bus_stops
