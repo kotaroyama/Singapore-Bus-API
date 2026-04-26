@@ -65,13 +65,26 @@ async def get_bus_stops():
                 tasks = [fetch_url(client, url) for url in urls]
                 data = await asyncio.gather(*tasks)
         except httpx.HTTPStatusError as exc:
-            raise RuntimeError(
-                f"Request failed with status {exc.response.status_code}"
-            ) from exc
+            # An error occurs on the mytransport.sg side while making requests concurrently
+            #   If that happens, just request the URLs one by one from the start
+            print(exc)
+            new_bus_stops = await get_bus_stop_sync(skip=0)
+            cache_bus_stops(new_bus_stops)
+            return new_bus_stops
 
         for item in data:
             new_bus_stops.extend(item["value"])
-    
+
+    additional_bus_stops = await get_bus_stop_sync(skip)
+    new_bus_stops.extend(additional_bus_stops)
+    cache_bus_stops(new_bus_stops)
+
+    # Combine all the bus stops and return them
+    bus_stops.extend(new_bus_stops)
+    return bus_stops
+
+async def get_bus_stop_sync(skip):
+    new_bus_stops = []
     while True:
         async with httpx.AsyncClient() as client:
             url = f"https://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip={skip}"
@@ -82,11 +95,7 @@ async def get_bus_stops():
             break
         new_bus_stops.extend(data["value"])
         skip += 500
-    cache_bus_stops(new_bus_stops)
-
-    # Combine all the bus stops and return them
-    bus_stops.extend(new_bus_stops)
-    return bus_stops
+    return new_bus_stops
 
 async def fetch_url(client, url):
     r = await client.get(url, headers=headers)
