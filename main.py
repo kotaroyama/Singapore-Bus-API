@@ -3,6 +3,7 @@ from typing import Annotated, List
 
 from fastapi import FastAPI, Path, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from schemas import BusStop, SearchedBusStop, Services, SingaporeLocation
@@ -18,6 +19,8 @@ from services import (
 from utils import decode_arrival, format_arrivals, get_bus_stop_desc, get_bus_stop_list, get_lat_long_range
 
 app = FastAPI()
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
