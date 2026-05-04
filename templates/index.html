@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <!-- Stylesheet -->
+    <link rel="stylesheet"
+          type="text/css"
+          href="{{ url_for('static', path='style.css') }}">
+    
 </head>
 <body>
     <h1>Bus Arrival Infomation System</h1>
@@ -17,68 +22,6 @@
     <h3 id="busStopCode"></h3>
     <ul id="arrivals">
     </ul>
-    <script>
-        function sendMessage(event) {
-            const loadingLable = document.getElementById('loadingLable');
-            loadingLable.textContent = "loading...";
-            const busStop = document.getElementById('busStopText').value;
-            const url = `ws://localhost:8000/ws/bus/${busStop}`;
-            try {
-                const ws = new WebSocket(url);
-                ws.onmessage = function(event) {
-
-                    const busStopInfo = document.getElementById('busStopName');
-                    const busStopCode = document.getElementById('busStopCode');
-                    const messages = document.getElementById('arrivals');
-                    // Clear the loading thing
-                    loadingLable.innerHTML = '';
-                    // Clear the existing <li>'s
-                    messages.innerHTML = '';
-
-                    // Render next arrivals
-                    const data = JSON.parse(event.data);
-                    const stopDesc = data.description;
-                    const nextArrivals = data.next_arrivals;
-                    const stopCode = data.stop_code;
-                    
-                    // Delete the clear button if it already exists
-                    document.getElementById("clearBtn")?.remove();
-
-
-                    // Add texts for bus stop description and stop code
-                    busStopInfo.textContent = stopDesc;
-                    busStopCode.textContent = stopCode;
-
-                    nextArrivals.forEach(arrival => {
-                        const message = document.createElement('li');
-                        message.textContent = `${arrival.service} in ${arrival.minutes} mins`;
-                        messages.appendChild(message);
-                    });
-
-                    // Create clear button
-                    const clearButton = document.createElement('button');
-                    clearButton.id = "clearBtn"
-                    clearButton.textContent = "Clear";
-                    clearButton.addEventListener("click", function() {
-                        ws.close(1000, "User clicked disconnect");
-                        // Clear bus stop description, stop code and arrivals
-                        busStopInfo.innerHTML = '';
-                        busStopCode.innerHTML = '';
-                        messages.innerHTML = '';
-                        // Clear the button itself
-                        clearButton.remove();
-                    });
-                    document.body.appendChild(clearButton);
-                };
-                // Clear input
-                var input = document.getElementById("busStopText");
-                input.value = '';
-            } catch (e) {
-                alert("URL not valid you fuck");
-                console.log(e);
-            }
-            event.preventDefault();
-        }
-    </script>
+    <script src="{{ url_for('static', path='main.js') }}"></script>
 </body>
 </html>
