@@ -6,6 +6,12 @@ from geopy.distance import geodesic
 from schemas import Arrival, SearchedBusStop
 from services import get_bus_stops
 
+def format_arrivals(first_n_arrivals) -> list:
+    formatted_arrivals = []
+    for arrival in first_n_arrivals:
+        formatted_arrivals.append(decode_arrival(arrival))
+    return formatted_arrivals
+
 def decode_arrival(raw_arrival: list):
     service = raw_arrival[0]
     current_time = datetime.now(ZoneInfo("Asia/Singapore"))

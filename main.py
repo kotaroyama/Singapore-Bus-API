@@ -1,6 +1,9 @@
+import asyncio
 from typing import Annotated, List
 
-from fastapi import FastAPI, Path, Query
+from fastapi import FastAPI, Path, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 from schemas import BusStop, SearchedBusStop, Services, SingaporeLocation
 from services import (
@@ -12,9 +15,11 @@ from services import (
     search_bus_stops_with_lat_and_long, 
     search_bus_stops_with_query,
 )
-from utils import decode_arrival, get_bus_stop_desc, get_bus_stop_list, get_lat_long_range
+from utils import decode_arrival, format_arrivals, get_bus_stop_desc, get_bus_stop_list, get_lat_long_range
 
 app = FastAPI()
+
+templates = Jinja2Templates(directory="templates")
 
 stop_code_param = Annotated[str, Path(
     pattern = r"^\d{5}$",
@@ -32,9 +37,7 @@ async def get_next_arrivals(
     first_n_arrivals = get_next_n_arrivals(services, limit)
 
     # Format arrivals
-    formatted_arrivals = []
-    for arrival in first_n_arrivals:
-        formatted_arrivals.append(decode_arrival(arrival))
+    formatted_arrivals = format_arrivals(first_n_arrivals)
     
     # Construct return
     description = await get_bus_stop_desc(stop_code)
@@ -118,3 +121,40 @@ async def cache_refresh() -> List[SearchedBusStop]:
     bus_stops = await reset_cached_bus_stops()
     formatted_bus_stops = get_bus_stop_list(bus_stops[:5])
     return formatted_bus_stops
+
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+    bus_stop = "05189"
+    context = {
+        "bus_stop": bus_stop,
+    }
+    return templates.TemplateResponse(
+        request=request, name="index.html", context=context,
+    )
+
+@app.websocket("/ws/bus/{stop_code}")
+async def get_next_arrivals(
+    websocket: WebSocket,
+    stop_code: stop_code_param,
+):
+    await websocket.accept()
+    try:
+        while True:
+            # Get the next 3 arrivals
+            limit = 3
+            services = await fetch_arrival_info(stop_code)
+            first_n_arrivals = get_next_n_arrivals(services, limit)
+            formatted_arrivals = format_arrivals(first_n_arrivals)
+            # Construct return
+            description = await get_bus_stop_desc(stop_code)
+            formatted_arrivals_dict = [arrival.__dict__ for arrival in formatted_arrivals]
+            bus_stop_json = {
+                "description": description,
+                "stop_code": stop_code,
+                "next_arrivals": formatted_arrivals_dict,
+            }
+            await websocket.send_json(bus_stop_json)
+            await asyncio.sleep(10)
+
+    except WebSocketDisconnect as e:
+        print(f"Client disconnected: {e.code}")
