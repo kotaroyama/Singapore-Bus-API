@@ -2,7 +2,7 @@ function sendMessage(event) {
     const loadingLable = document.getElementById('loadingLable');
     loadingLable.textContent = "loading...";
     const busStop = document.getElementById('busStopText').value;
-    const url = `ws://localhost:8000/ws/bus/${busStop}`;
+    const url = `ws://localhost/ws/bus/${busStop}`;
     try {
         const ws = new WebSocket(url);
         ws.onmessage = function(event) {
