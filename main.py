@@ -2,6 +2,7 @@ import asyncio
 from typing import Annotated, List
 
 from fastapi import FastAPI, Path, Query, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 
 from schemas import BusStop, SearchedBusStop, Services, SingaporeLocation
 from services import (
@@ -16,6 +17,18 @@ from services import (
 from utils import decode_arrival, format_arrivals, get_bus_stop_desc, get_bus_stop_list, get_lat_long_range
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 stop_code_param = Annotated[str, Path(
     pattern = r"^\d{5}$",
