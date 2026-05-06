@@ -6,13 +6,19 @@ services:
     ports:
       - "6379:6379"
     restart: unless-stopped
-  web:
+  backend:
     image: sg_bus_api
     build: .
     container_name: sg_bus_api_1
     ports:
-      - "80:8000"
+      - "8000:8000"
     depends_on:
       - redis
     environment:
       API_KEY: 0CJCe167TYqoXZrnj6XT4Q==
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
