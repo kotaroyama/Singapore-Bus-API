@@ -1,10 +1,7 @@
 import asyncio
 from typing import Annotated, List
 
-from fastapi import FastAPI, Path, Query, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI, Path, Query, WebSocket, WebSocketDisconnect
 
 from schemas import BusStop, SearchedBusStop, Services, SingaporeLocation
 from services import (
@@ -19,10 +16,6 @@ from services import (
 from utils import decode_arrival, format_arrivals, get_bus_stop_desc, get_bus_stop_list, get_lat_long_range
 
 app = FastAPI()
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-templates = Jinja2Templates(directory="templates")
 
 stop_code_param = Annotated[str, Path(
     pattern = r"^\d{5}$",
@@ -124,16 +117,6 @@ async def cache_refresh() -> List[SearchedBusStop]:
     bus_stops = await reset_cached_bus_stops()
     formatted_bus_stops = get_bus_stop_list(bus_stops[:5])
     return formatted_bus_stops
-
-@app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    bus_stop = "05189"
-    context = {
-        "bus_stop": bus_stop,
-    }
-    return templates.TemplateResponse(
-        request=request, name="index.html", context=context,
-    )
 
 @app.websocket("/ws/bus/{stop_code}")
 async def get_next_arrivals(
