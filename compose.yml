@@ -15,8 +15,9 @@ services:
     depends_on:
       - redis
     environment:
-      API_KEY: 0CJCe167TYqoXZrnj6XT4Q==
+      API_KEY: ${API_KEY}
   frontend:
+    image: sg_bus_frontend
     build: ./frontend
     depends_on:
       - backend
