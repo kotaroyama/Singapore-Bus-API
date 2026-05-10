@@ -6,9 +6,6 @@ Real-time bus arrival tracker for Singapore built with FastAPI, WebSockets, Redi
 
 Live Demo: https://sg-bus-arrivals.com/
 
-## Screenshots
-![Screenshot](./images/demo1.png)
-
 ## Features
 
 - Real-time bus arrival updates for any bus stop in singapore using WebSockets
@@ -21,7 +18,7 @@ Live Demo: https://sg-bus-arrivals.com/
 
 ## How It Works
 ### Basic Function
- The most basic function of this API project is when a user input the 5-digit code for any bus stop in Singapore, it fetches the next arrivals for that stop.
+ The most basic function of this API project is when a user input [the 5-digit code](https://svc.simplygo.com.sg/eservice/eguide/bscode_idx.php) for any bus stop in Singapore, it fetches the next arrivals for that stop and displays them.
 ### Caching Sterategy
 I decided to cache all the bus stops (5,000+ as of 2026) with Redis under the assumption that the number of bus stops don't change frequently so that I don't have to make calls to the LTA API everytime a user gets arrival information for a bus stop. I chose to use redis for its speed and ease.
 ### Async HTTP Requests
@@ -69,3 +66,9 @@ Backend at: http://localhost:8000
 - Dealing with pagination on the LTA API
 - Error handling when making requests to the LTA API with httpx
 - Configuring WebSockets and Nginx
+
+## Todo
+- Integrate the search function of the API so that besides 5-digit stop codes, also accept keywords for a bus_stop.
+
+## Screenshots
+![Screenshot](./images/demo1.png)
