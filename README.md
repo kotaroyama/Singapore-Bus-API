@@ -6,6 +6,9 @@ Real-time bus arrival tracker for Singapore built with FastAPI, WebSockets, Redi
 
 Live Demo: https://sg-bus-arrivals.com/
 
+## Background
+In February 2026, I was traveling through Southeast Asia and stopped in Singapore for a few days. Throughout my stay, I ended up relying heavily on buses, and at one point, I wanted to get all the next few arrivals for a bus stop, but Google Maps didn't provide that feature yet. Basically, that's where I got the idea for this project.
+
 ## Features
 
 - Real-time bus arrival updates for any bus stop in singapore using WebSockets
